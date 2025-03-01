@@ -51,3 +51,20 @@ POST http://localhost:8080/sign-in
 ```
 
 ![Image](https://github.com/user-attachments/assets/e23a373a-5584-4749-9ffc-a14a1af12dd2)
+
+### 3. Admin Message (admin-message)
+```http
+POST http://localhost:8080/api/admin-message
+```
+- **Body:**
+``` Need Bearer Token
+
+```
+- **Response:**
+```json
+{
+    "Welcome to Admin Role: [SCOPE_ROLE_ADMIN, SCOPE_PERMISSION_UPDATE, SCOPE_PERMISSION_READ, SCOPE_PERMISSION_WRITE]"
+}
+```
+
+![Image](https://github.com/user-attachments/assets/907a3db8-5e05-4da4-9f10-56d9c0a6826d)
