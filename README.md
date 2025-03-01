@@ -50,7 +50,7 @@ POST http://localhost:8080/sign-in
 }
 ```
 
-![Image](https://github.com/user-attachments/assets/e23a373a-5584-4749-9ffc-a14a1af12dd2)
+![Image](https://github.com/user-attachments/assets/0a6564b7-f638-4662-8cc7-13d4a249a1cd)
 
 ### 3. Admin Message (admin-message)
 ```http
