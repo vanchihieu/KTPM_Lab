@@ -25,7 +25,7 @@ POST http://localhost:8080/sign-up
 
 ### 2. Đăng nhập (Login)
 ```http
-POST http://localhost:8080/sign-up
+POST http://localhost:8080/sign-in
 ```
 - **Body:**
 ```json
