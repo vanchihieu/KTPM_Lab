@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  django:
+    build:
+      context: ./django_project
+      dockerfile: Dockerfile
+    command: python3 manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./django_project:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+
+  celery:
+    build:
+      context: ./django_project
+      dockerfile: Dockerfile
+    command: celery -A django_project worker --loglevel=info
+    volumes:
+      - ./django_project:/app
+    depends_on:
+      - redis
+      - django
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+networks:
+  default:
+    driver: bridge
