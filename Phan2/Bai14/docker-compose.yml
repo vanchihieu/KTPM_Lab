@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: web_server
+    networks:
+      - private_net
+
+  alpine:
+    image: alpine
+    container_name: tiny_client
+    command: sleep 9999
+    networks:
+      - private_net
+
+networks:
+  private_net:
+    driver: bridge
