@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:latest
+    container_name: limited_redis
+    ports:
+      - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'       # Giới hạn Redis chỉ dùng tối đa 50% CPU (1 core = 1.0)
+          memory: 256M      # Giới hạn RAM là 256MB
