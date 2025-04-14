@@ -4,7 +4,7 @@ import com.ktpm.productservice.model.Product;
 import com.ktpm.productservice.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +15,7 @@ public class OrderEventListener {
 
     private final ProductRepository productRepository;
 
-    @RabbitListener(queues = {"${spring.rabbitmq.queues.order-created}"})
+    @KafkaListener(topics = "${kafka.topic.order-created}", groupId = "${spring.kafka.consumer.group-id}")
     @Transactional
     public void handleOrderCreatedEvent(OrderEvent orderEvent) {
         log.info("Received order created event for order ID: {}", orderEvent.getOrderId());
@@ -42,7 +42,7 @@ public class OrderEventListener {
         });
     }
 
-    @RabbitListener(queues = {"${spring.rabbitmq.queues.order-cancelled}"})
+    @KafkaListener(topics = "${kafka.topic.order-cancelled}", groupId = "${spring.kafka.consumer.group-id}")
     @Transactional
     public void handleOrderCancelledEvent(OrderEvent orderEvent) {
         log.info("Received order cancelled event for order ID: {}", orderEvent.getOrderId());

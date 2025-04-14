@@ -40,11 +40,11 @@ public class OrderService {
                 .map(orderItemRequest -> {
                     // Get product price from product service
                     var productResponse = productClient.getProductById(orderItemRequest.getProductId());
-                    
+
                     return OrderItem.builder()
                             .productId(orderItemRequest.getProductId())
                             .quantity(orderItemRequest.getQuantity())
-                            .price(productResponse.getPrice())
+                            .price(productResponse.getPrice())  // Assuming ProductResponse has a price() accessor method instead
                             .order(order)
                             .build();
                 }).collect(Collectors.toList());

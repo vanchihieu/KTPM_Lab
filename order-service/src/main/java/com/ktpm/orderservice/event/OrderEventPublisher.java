@@ -1,11 +1,10 @@
 package com.ktpm.orderservice.event;
 
-import com.ktpm.orderservice.config.RabbitMQConfig;
-import com.ktpm.orderservice.dto.OrderResponse;
 import com.ktpm.orderservice.model.Order;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
@@ -15,28 +14,26 @@ import java.util.stream.Collectors;
 @Slf4j
 public class OrderEventPublisher {
 
-    private final RabbitTemplate rabbitTemplate;
+    private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
+    
+    @Value("${kafka.topic.order-created}")
+    private String orderCreatedTopic;
+    
+    @Value("${kafka.topic.order-cancelled}")
+    private String orderCancelledTopic;
 
     public void publishOrderCreatedEvent(Order order) {
         OrderCreatedEvent event = mapToOrderCreatedEvent(order);
         
         log.info("Publishing order created event for order ID: {}", order.getId());
-        rabbitTemplate.convertAndSend(
-                RabbitMQConfig.ORDER_EXCHANGE,
-                RabbitMQConfig.ORDER_CREATED_ROUTING_KEY,
-                event
-        );
+        kafkaTemplate.send(orderCreatedTopic, event);
     }
 
     public void publishOrderCancelledEvent(Order order) {
         OrderCreatedEvent event = mapToOrderCreatedEvent(order);
         
         log.info("Publishing order cancelled event for order ID: {}", order.getId());
-        rabbitTemplate.convertAndSend(
-                RabbitMQConfig.ORDER_EXCHANGE,
-                RabbitMQConfig.ORDER_CANCELLED_ROUTING_KEY,
-                event
-        );
+        kafkaTemplate.send(orderCancelledTopic, event);
     }
 
     private OrderCreatedEvent mapToOrderCreatedEvent(Order order) {

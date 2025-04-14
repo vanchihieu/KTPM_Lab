@@ -25,3 +25,10 @@ Dự án này xây dựng hệ thống quản lý bán hàng đơn giản bằng
 - `/api-gateway`: API Gateway
 - `/discovery-server`: Service Discovery (Eureka Server)
 - `/docker-compose.yml`: Cấu hình Docker Compose
+
+## Minh chứngchứng
+![Image](https://github.com/user-attachments/assets/15724685-2fa4-4e35-ae5d-397dba0b2f30)
+
+![Image](https://github.com/user-attachments/assets/8c862f9d-013b-4cbf-88d4-220886b89262)
+
+![Image](https://github.com/user-attachments/assets/8514b6c3-42b9-496e-ac7c-3e3c8ddc5857)

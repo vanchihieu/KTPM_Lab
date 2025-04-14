@@ -1,17 +1,15 @@
 version: "3.8"
 
 services:
-  # MySQL Databases
+  # MariaDB Databases
   product-db:
-    image: mysql:8.0
+    image: mariadb:10.6
     container_name: product-db
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: product_service_db
+      MYSQL_DATABASE: microservice_products
     ports:
       - "3307:3306"
-    volumes:
-      - product-db-data:/var/lib/mysql
     healthcheck:
       test:
         ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
@@ -20,15 +18,13 @@ services:
       retries: 10
 
   order-db:
-    image: mysql:8.0
+    image: mariadb:10.6
     container_name: order-db
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: order_service_db
+      MYSQL_DATABASE: microservice_orders
     ports:
       - "3308:3306"
-    volumes:
-      - order-db-data:/var/lib/mysql
     healthcheck:
       test:
         ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
@@ -37,15 +33,13 @@ services:
       retries: 10
 
   customer-db:
-    image: mysql:8.0
+    image: mariadb:10.6
     container_name: customer-db
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: customer_service_db
+      MYSQL_DATABASE: microservice_customers
     ports:
       - "3309:3306"
-    volumes:
-      - customer-db-data:/var/lib/mysql
     healthcheck:
       test:
         ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
@@ -53,19 +47,40 @@ services:
       timeout: 5s
       retries: 10
 
-  # RabbitMQ for message broker
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
+  # Kafka for message broker
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
     healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
       interval: 5s
+      timeout: 5s
+      retries: 10
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test:
+        ["CMD", "kafka-topics", "--bootstrap-server", "kafka:9092", "--list"]
+      interval: 10s
       timeout: 5s
       retries: 10
 
@@ -113,17 +128,17 @@ services:
       - "8081:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://product-db:3306/product_service_db
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://product-db:3306/microservice_products?createDatabaseIfNotExist=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=password
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
-      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
       product-db:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
-      rabbitmq:
+      kafka:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
@@ -141,17 +156,17 @@ services:
       - "8082:8082"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://order-db:3306/order_service_db
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://order-db:3306/microservice_orders?createDatabaseIfNotExist=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=password
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
-      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
       order-db:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
-      rabbitmq:
+      kafka:
         condition: service_healthy
       product-service:
         condition: service_healthy
@@ -171,25 +186,20 @@ services:
       - "8083:8083"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://customer-db:3306/customer_service_db
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://customer-db:3306/microservice_customers?createDatabaseIfNotExist=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=password
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
-      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
       customer-db:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
-      rabbitmq:
+      kafka:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-volumes:
-  product-db-data:
-  order-db-data:
-  customer-db-data:
