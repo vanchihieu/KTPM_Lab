@@ -1,1 +1,1 @@
-console.log("this is a test file for the 'uat' package.");
+console.log("uat file is running!");
